@@ -14,11 +14,16 @@ public class GameManager : MonoBehaviour
 	public TextureScroller ground;
 	public float gameTime = 10;
 	public float invisibleTime;
+	public static float SpeedUpCoef = 1;
+	public float speedUpStep = 5;
+	public float speedUpAdd = 0.15f;
+	private int speedUpCount;
 	
 	float totalTimeElapsed = 0;
 	bool isGameOver = false;
 	private float invisTime;
-
+	private float tSpeedUp;
+	
 	private void Awake()
 	{
 		shield.SetActive(false);
@@ -29,7 +34,17 @@ public class GameManager : MonoBehaviour
 	{
 		if (isGameOver)
 			return;
-	
+
+		tSpeedUp += Time.deltaTime;
+
+		if (tSpeedUp > speedUpStep)
+		{
+			speedUpCount++;
+			tSpeedUp = 0;
+
+			SpeedUpCoef += speedUpAdd * speedUpCount;
+		}
+		
 		if (!shieldIsOn)
 			gameTime -= Time.deltaTime;
 

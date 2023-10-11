@@ -10,7 +10,7 @@ public class Collidable : MonoBehaviour
 
 	void Update()
 	{
-		transform.Translate(0, 0, -moveSpeed * Time.deltaTime);
+		transform.Translate(0, 0, -moveSpeed * GameManager.SpeedUpCoef * Time.deltaTime);
 	}
 
 	protected virtual void OnCollide()

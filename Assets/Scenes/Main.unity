@@ -316,6 +316,7 @@ MonoBehaviour:
   ground: {fileID: 1959741513}
   gameTime: 20
   invisibleTime: 5
+  speedUpStep: 5
 --- !u!4 &447089256
 Transform:
   m_ObjectHideFlags: 0

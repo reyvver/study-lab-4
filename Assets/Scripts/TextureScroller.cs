@@ -15,7 +15,7 @@ public class TextureScroller : MonoBehaviour
 	void Update()
 	{
 		//Увеличение смещения в зависимости от времени
-		offset += Time.deltaTime * speed;
+		offset += Time.deltaTime * speed * GameManager.SpeedUpCoef;
 		//Смещение в диапазоне от 0 до 1 
 		if (offset > 1)
 			offset -= 1;
