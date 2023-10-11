@@ -1,76 +1,116 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using DefaultNamespace;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+	public UIManager UIManager;
+	public Player player;
+	public GameObject shield;
+	public GameObject invisible;
+	public bool shieldIsOn => shield.activeSelf;
+	public bool invisibleIsOn => invisible.activeSelf;
 	public TextureScroller ground;
 	public float gameTime = 10;
-
+	public float invisibleTime;
+	
 	float totalTimeElapsed = 0;
 	bool isGameOver = false;
+	private float invisTime;
 
-	// Следим за временем
+	private void Awake()
+	{
+		shield.SetActive(false);
+		invisible.SetActive(false);
+	}
+
 	void Update()
 	{
 		if (isGameOver)
 			return;
 	
-	// Добавляем время с момента последнего кадра (Time.deltaTime) к переменной totalTimeElapsed
-		totalTimeElapsed += Time.deltaTime;
-		gameTime -= Time.deltaTime;
+		if (!shieldIsOn)
+			gameTime -= Time.deltaTime;
 
-	// Если игра завершилась, устанавливаем флаг isGameOver
+		totalTimeElapsed += Time.deltaTime;
+
+		UpdateCount();
+		
 		if (gameTime <= 0)
+		{
+			Time.timeScale = 0;
 			isGameOver = true;
+			UIManager.ShowReplayPanel((int)totalTimeElapsed);
+		}
 	}
 
-	// Метод вызывается, когда игрок сталкивается с бонусом или препятствием
 	public void AdjustTime(float amount)
 	{
-		// Изменяем количество оставшегося времени 
-		gameTime += amount;
-		// Если значение изменения отрицательно (препятствие), 
-		// данный метод вызывает метод замедления игры
 		if (amount < 0)
+		{
+			if (invisibleIsOn) return;
+			if (shieldIsOn) SetShieldActive(false);
 			SlowWorldDown();
+		}
+		
+		gameTime += amount;
 	}
 
-	// Метод вызывается, когда игрок попадает в препятствие
 	void SlowWorldDown()
 	{
-		// Отмена «ускорения» мира
-		// Мир замедляется на 1 секунду
 		CancelInvoke(); 
-		Time.timeScale = 0.5f;
-		// Вызов метода ускорения игры через 1 секунд
+		Time.timeScale = 0.35f;
 		Invoke("SpeedWorldUp", 1);
 	}
 
-	// Метод ускоряет игру, возвращая ее к нормальному темпу
 	void SpeedWorldUp()
 	{
 		Time.timeScale = 1f;
 	}
-	// Обратите внимание, что здесь используется старая система интерфейсов Unity
-	// Метод OnGUI выводит на экран оставшееся и прошедшее время игры
-	void OnGUI()
+
+	private void UpdateCount()
 	{
-		if (!isGameOver)
+		UIManager.UpdateText((int)gameTime);
+	}
+	
+	public void SetShieldActive(bool value)
+	{
+		shield.SetActive(value);
+	}
+
+	public void SetInvisible()
+	{
+		if (invisibleIsOn)
 		{
-			Rect boxRect = new Rect(Screen.width / 2 - 50, Screen.height - 100, 100, 50);
-			GUI.Box(boxRect, "Time Remaining");
-
-			Rect labelRect = new Rect(Screen.width / 2 - 10, Screen.height - 80, 20, 40);
-			GUI.Label(labelRect, ((int)gameTime).ToString());
+			invisTime += invisibleTime;
+			return;
 		}
-		else
+		invisTime = invisibleTime;
+		StartCoroutine(Invisible());
+	}
+
+	public void Replay()
+	{
+		Time.timeScale = 1;
+		SceneManager.LoadScene(sceneBuildIndex: 1);
+	}
+
+	private IEnumerator Invisible()
+	{
+		invisible.SetActive(true);
+		player.SetInvisible(invisibleIsOn);
+
+		float t = 0;
+
+		while (t <= invisTime)
 		{
-			Rect boxRect = new Rect(Screen.width / 2 - 60, Screen.height / 2 - 100, 120, 50);
-			GUI.Box(boxRect, "Game Over");
-
-			Rect labelRect = new Rect(Screen.width / 2 - 55, Screen.height / 2 - 80, 90, 40);
-			GUI.Label(labelRect, "Total Time: " +(int)totalTimeElapsed);
-
-			Time.timeScale = 0;
+			t += Time.deltaTime;
+			UIManager.UpdateInvisibleText((int) (invisTime - t));
+			yield return null;
 		}
+		
+		invisible.SetActive(false);
+		player.SetInvisible(invisibleIsOn);
 	}
 }

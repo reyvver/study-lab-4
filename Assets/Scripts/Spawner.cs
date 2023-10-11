@@ -1,54 +1,73 @@
-﻿using UnityEngine;
+﻿using DefaultNamespace;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class Spawner : MonoBehaviour
 {
-	// Ссылки на игровые объекты «бонус» и «препятствие» 
-	public GameObject powerupPrefab;
-	public GameObject obstaclePrefab;
+	public Bonus[] bonusPrefabs;
+	public Collidable[] obstaclePrefab;
 
-	// Переменные для управления временем и порядком появления объектов
-	public float spawnCycle = .5f;
+	public float minSpawnTime = 0.5f;
+	public float maxSpawnTime = 1.5f;
 
 	GameManager manager;
-
+	
 	float elapsedTime;
-	// Бонусы и препятствия будут порождаться поочередно, и специальный флаг
-	// станет следить за тем, что именно должно порождаться
 	bool spawnPowerup = true;
-
+	private float time;
+	
 	void Start()
 	{
 		manager = GetComponent<GameManager>();
+		time = Random.Range(minSpawnTime, maxSpawnTime + 1);
 	}
 
 	void Update()
 	{
-		// Увеличивается счетчик истекшего времени
 		elapsedTime += Time.deltaTime;
 
-		// Пора ли порождать новый объект?
-		if (elapsedTime > spawnCycle)
+		if (elapsedTime > time)
 		{
 			GameObject temp;
-			// Какой объект нужно породить: бонус или препятствие?
 			if (spawnPowerup)
-				temp = Instantiate(powerupPrefab) as GameObject;
+				temp = Instantiate(SpawnBonus());
 			else
-				temp = Instantiate(obstaclePrefab) as GameObject;
+				temp = Instantiate(SelectObstacle());
 
-			// Новый объект смещается вправо или влево на случайную величину
 			Vector3 position = temp.transform.position;
 			position.x = Random.Range(-3f, 3f);
 			temp.transform.position = position;
 
-			// Новый объект получает ссылку на менеджера игры
 			Collidable col = temp.GetComponent<Collidable>();
 			col.manager = manager;
 
-			// Уменьшается истекшее время
 			elapsedTime = 0;
-			// Флаг, отвечающий за тип порождаемого объекта, меняется на противоположный
 			spawnPowerup = !spawnPowerup;
+			time = Random.Range(minSpawnTime, maxSpawnTime + 1);
+		}
+	}
+
+	private GameObject SelectObstacle()
+	{
+		var index = Random.Range(0, obstaclePrefab.Length);
+		var obstacle = obstaclePrefab[index];
+		return obstacle.gameObject;
+	}
+
+	private GameObject SpawnBonus()
+	{
+		while (true)
+		{
+			var index = Random.Range(0, bonusPrefabs.Length);
+			var bonus = bonusPrefabs[index];
+
+			if (bonus.bonusType == Bonus.BonusType.AddShield && manager.shieldIsOn ||
+			    bonus.bonusType == Bonus.BonusType.AddInvisible && manager.invisibleIsOn)
+			{
+				continue;
+			}
+			
+			return bonus.gameObject;
 		}
 	}
 }
