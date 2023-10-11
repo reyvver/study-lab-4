@@ -107,6 +107,7 @@ public class GameManager : MonoBehaviour
 
 	public void Replay()
 	{
+		SpeedUpCoef = 1;
 		Time.timeScale = 1;
 		SceneManager.LoadScene(sceneBuildIndex: 1);
 	}
